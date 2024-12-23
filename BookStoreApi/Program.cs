@@ -3,6 +3,7 @@ using BookStoreApi.Infrastructure.Data.Configuration;
 using BookStoreApi.Interfaces;
 using BookStoreApi.Service;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,16 @@ builder.Services.Configure<BookStoreDatabaseSettings>(
     builder.Configuration.GetSection("BookStoreDatabase"));
 
 builder.Services.AddSingleton<IBooksService, BooksService>();
+
+# region [Redis Register]
+
+string redisConfiguration = builder.Configuration.GetSection("Redis")["ConnectionString"]!;
+ConnectionMultiplexer? redis = ConnectionMultiplexer.Connect(redisConfiguration);
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
+builder.Services.AddSingleton<IRedisCacheService, RedisCacheService>();
+
+# endregion
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -10,9 +10,14 @@ namespace BookStoreApi.Service;
 
 public class BooksService : IBooksService
 {
+    private readonly IRedisCacheService _cacheService;
     private readonly IMongoCollection<Book> _booksCollection;
+    private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(2);
 
-    public BooksService(IOptions<BookStoreDatabaseSettings> bookStoreDatabaseSettings)
+    public BooksService(
+        IOptions<BookStoreDatabaseSettings> bookStoreDatabaseSettings,
+        IRedisCacheService cacheService
+        )
     {
         // Get MongoClient from the connection string in settings
         var mongoClient = new MongoClient(bookStoreDatabaseSettings.Value.ConnectionString);
@@ -22,6 +27,8 @@ public class BooksService : IBooksService
 
         // Initialize the collection
         _booksCollection = mongoDatabase.GetCollection<Book>(bookStoreDatabaseSettings.Value.BooksCollectionName);
+
+        _cacheService = cacheService;
     }
 
     public async Task<ServiceResponse<BookResponse>> AddBookAsync(BookRequest newBook)
@@ -46,6 +53,11 @@ public class BooksService : IBooksService
     public async Task<ServiceResponse<BookResponse>> GetBookByIdAsync(string id)
     {
         ServiceResponse<BookResponse> serviceResponse = new();
+        string cacheKey = $"Book: {id}";
+        var cachedBook = await _cacheService.GetCacheValueAsync<ServiceResponse<BookResponse>>(cacheKey);
+
+        if (cachedBook != null)
+            return cachedBook;
 
         try
         {
@@ -61,7 +73,10 @@ public class BooksService : IBooksService
                 return serviceResponse;
             }
 
-            serviceResponse.Data = BookMapper.BookToBookResponse(book!);
+            serviceResponse.Data = BookMapper.BookToBookResponse(book);
+
+            await _cacheService.SetCacheValueAsync(cacheKey, serviceResponse, CacheExpiration);
+
         }
 
         catch (Exception ex)
@@ -111,7 +126,7 @@ public class BooksService : IBooksService
             if (book.DeletedCount == 0)
             {
                 serviceResponse.Success = false;
-                serviceResponse.Message = $"Book witth Id {id} not found!";
+                serviceResponse.Message = $"Book with Id {id} not found!";
             }
         }
 
