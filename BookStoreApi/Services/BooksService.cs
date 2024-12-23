@@ -12,21 +12,16 @@ public class BooksService : IBooksService
 {
     private readonly IMongoCollection<Book> _booksCollection;
 
-    public BooksService(
-        IMongoCollection<Book> booksCollection,
-        IOptions<BookStoreDatabaseSettings> bookStoreDatabaseSettings
-    )
+    public BooksService(IOptions<BookStoreDatabaseSettings> bookStoreDatabaseSettings)
     {
-        _booksCollection = booksCollection;
+        // Get MongoClient from the connection string in settings
+        var mongoClient = new MongoClient(bookStoreDatabaseSettings.Value.ConnectionString);
 
-        var mongoClient = new MongoClient(
-            bookStoreDatabaseSettings.Value.ConnectionString);
+        // Get the MongoDatabase from the client
+        var mongoDatabase = mongoClient.GetDatabase(bookStoreDatabaseSettings.Value.DatabaseName);
 
-        var mongoDatabase = mongoClient.GetDatabase(
-            bookStoreDatabaseSettings.Value.DatabaseName);
-
-        _booksCollection = mongoDatabase.GetCollection<Book>(
-        bookStoreDatabaseSettings.Value.BooksCollectionName);
+        // Initialize the collection
+        _booksCollection = mongoDatabase.GetCollection<Book>(bookStoreDatabaseSettings.Value.BooksCollectionName);
     }
 
     public async Task<ServiceResponse<BookResponse>> AddBookAsync(BookRequest newBook)
