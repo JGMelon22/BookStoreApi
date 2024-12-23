@@ -53,7 +53,15 @@ public class BooksService : IBooksService
                 .Find(x => x.Id == id)
                 .FirstOrDefaultAsync();
 
-            serviceResponse.Data = BookMapper.BookToBookResponse(book);
+            if (book == null)
+            {
+                serviceResponse.Success = false;
+                serviceResponse.Message = $"Book with Id {id} was not found!";
+
+                return serviceResponse;
+            }
+
+            serviceResponse.Data = BookMapper.BookToBookResponse(book!);
         }
 
         catch (Exception ex)
@@ -135,6 +143,8 @@ public class BooksService : IBooksService
             {
                 serviceResponse.Success = false;
                 serviceResponse.Message = $"Book with Id {id} not found!";
+
+                return serviceResponse;
             }
 
             var updatedDoc = await _booksCollection
