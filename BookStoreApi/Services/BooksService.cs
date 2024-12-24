@@ -109,7 +109,14 @@ public class BooksService : IBooksService
     {
         ServiceResponse<IEnumerable<BookResponse>> serviceResponse = new();
 
-        var cachedBooks = _cacheService.GetCacheValueAsync<IEnumerable<ServiceResponse<BookResponse>>>("[books]");
+        var cachedBooks = await _cacheService.GetCacheValueAsync<ServiceResponse<IEnumerable<BookResponse>>>("[books]");
+
+        if (cachedBooks != null)
+        {
+            _logger.LogInformation("Retrieved {Count} books from cache", cachedBooks.Data!.Count());
+            return cachedBooks;
+        }
+
         try
         {
             var books = await _booksCollection
