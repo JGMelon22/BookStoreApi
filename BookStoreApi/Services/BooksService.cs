@@ -91,8 +91,8 @@ public class BooksService : IBooksService
     public async Task<ServiceResponse<IEnumerable<BookResponse>>> GetBooksAsync()
     {
         ServiceResponse<IEnumerable<BookResponse>> serviceResponse = new();
-        // var cachedBook = await _cacheService.GetCacheValueAsync<ServiceResponse<BookResponse>>(cacheKey);
-        var cachedBooks = _cacheService.GetCacheValueAsync<IEnumerable<ServiceResponse<BookResponse>>>("[controller]");
+
+        var cachedBooks = _cacheService.GetCacheValueAsync<IEnumerable<ServiceResponse<BookResponse>>>("[books]");
         try
         {
             var books = await _booksCollection
@@ -105,7 +105,7 @@ public class BooksService : IBooksService
 
             serviceResponse.Data = booksResponse;
 
-            await _cacheService.SetCacheValueAsync("[controller]", serviceResponse, CacheExpiration);
+            await _cacheService.SetCacheValueAsync("[books]", serviceResponse, CacheExpiration);
         }
 
         catch (Exception ex)
