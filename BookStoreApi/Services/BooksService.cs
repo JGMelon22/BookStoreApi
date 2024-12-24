@@ -13,10 +13,12 @@ public class BooksService : IBooksService
     private readonly IRedisCacheService _cacheService;
     private readonly IMongoCollection<Book> _booksCollection;
     private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(2);
+    private readonly ILogger<BooksService> _logger;
 
     public BooksService(
         IOptions<BookStoreDatabaseSettings> bookStoreDatabaseSettings,
-        IRedisCacheService cacheService
+        IRedisCacheService cacheService,
+        ILogger<BooksService> logger
         )
     {
         // Get MongoClient from the connection string in settings
@@ -29,6 +31,8 @@ public class BooksService : IBooksService
         _booksCollection = mongoDatabase.GetCollection<Book>(bookStoreDatabaseSettings.Value.BooksCollectionName);
 
         _cacheService = cacheService;
+
+        _logger = logger;
     }
 
     public async Task<ServiceResponse<BookResponse>> AddBookAsync(BookRequest newBook)
@@ -39,10 +43,14 @@ public class BooksService : IBooksService
         {
             var book = BookMapper.BookRequestToBook(newBook);
             await _booksCollection.InsertOneAsync(book);
+
+            _logger.LogInformation("Book created successfully. Book: {0}", book);
         }
 
         catch (Exception ex)
         {
+            _logger.LogError("Failed to create book. Error: {0}", ex.Message);
+
             serviceResponse.Success = false;
             serviceResponse.Message = ex.Message;
         }
@@ -57,7 +65,10 @@ public class BooksService : IBooksService
         var cachedBook = await _cacheService.GetCacheValueAsync<ServiceResponse<BookResponse>>(cacheKey);
 
         if (cachedBook != null)
+        {
+            _logger.LogInformation("Book retrieved from cache. Id: {0}", id);
             return cachedBook;
+        }
 
         try
         {
@@ -67,6 +78,8 @@ public class BooksService : IBooksService
 
             if (book == null)
             {
+                _logger.LogWarning("Book not found. Id: {0}", id);
+
                 serviceResponse.Success = false;
                 serviceResponse.Message = $"Book with Id {id} was not found!";
 
@@ -77,10 +90,14 @@ public class BooksService : IBooksService
 
             await _cacheService.SetCacheValueAsync(cacheKey, serviceResponse, CacheExpiration);
 
+            _logger.LogInformation("Book retrieved successfully. Details: Id={0}, Name={1}, Category={2}, Author={3}, Price={4}",
+                book.Id, book.BookName, book.Category, book.Author, book.Price);
         }
 
         catch (Exception ex)
         {
+            _logger.LogError("Failed to retrieve book. Id: {0}. Error: {1}", id, ex.Message);
+
             serviceResponse.Success = false;
             serviceResponse.Message = ex.Message;
         }
@@ -106,10 +123,14 @@ public class BooksService : IBooksService
             serviceResponse.Data = booksResponse;
 
             await _cacheService.SetCacheValueAsync("[books]", serviceResponse, CacheExpiration);
+
+            _logger.LogInformation("Retrieved {0} books successfully", books.Count);
         }
 
         catch (Exception ex)
         {
+            _logger.LogError("Failed to retrieve books. Error: {0}", ex.Message);
+
             serviceResponse.Success = false;
             serviceResponse.Message = ex.Message;
         }
@@ -131,10 +152,14 @@ public class BooksService : IBooksService
                 serviceResponse.Success = false;
                 serviceResponse.Message = $"Book with Id {id} not found!";
             }
+
+            _logger.LogInformation("Book deleted successfully. Id: {0}", id);
         }
 
         catch (Exception ex)
         {
+            _logger.LogError("Failed to delete book. Id: {0}. Error: {1}", id, ex.Message);
+
             serviceResponse.Success = false;
             serviceResponse.Message = ex.Message;
         }
@@ -170,10 +195,15 @@ public class BooksService : IBooksService
                 .FirstOrDefaultAsync();
 
             serviceResponse.Data = BookMapper.BookToBookResponse(updatedDoc);
+
+            _logger.LogInformation("Book updated successfully. Book Details: Id={0}, Name={1}, Category={2}, Author={3}, Price={4}",
+                updatedDoc.Id, updatedDoc.BookName, updatedDoc.Category, updatedDoc.Author, updatedDoc.Price);
         }
 
         catch (Exception ex)
         {
+            _logger.LogError("Failed to update book. Id: {0}. Error: {1}", id, ex.Message);
+
             serviceResponse.Success = false;
             serviceResponse.Message = ex.Message;
         }
