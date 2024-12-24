@@ -44,6 +44,8 @@ public class BooksService : IBooksService
             var book = BookMapper.BookRequestToBook(newBook);
             await _booksCollection.InsertOneAsync(book);
 
+            await _cacheService.RemoveDataAsync("books");
+
             _logger.LogInformation("Book created successfully. Book: {0}", book);
         }
 
@@ -109,7 +111,7 @@ public class BooksService : IBooksService
     {
         ServiceResponse<IEnumerable<BookResponse>> serviceResponse = new();
 
-        var cachedBooks = await _cacheService.GetCacheValueAsync<ServiceResponse<IEnumerable<BookResponse>>>("[books]");
+        var cachedBooks = await _cacheService.GetCacheValueAsync<ServiceResponse<IEnumerable<BookResponse>>>("books");
 
         if (cachedBooks != null)
         {
@@ -129,7 +131,7 @@ public class BooksService : IBooksService
 
             serviceResponse.Data = booksResponse;
 
-            await _cacheService.SetCacheValueAsync("[books]", serviceResponse, CacheExpiration);
+            await _cacheService.SetCacheValueAsync("books", serviceResponse, CacheExpiration);
 
             _logger.LogInformation("Retrieved {0} books successfully", books.Count);
         }
@@ -159,6 +161,9 @@ public class BooksService : IBooksService
                 serviceResponse.Success = false;
                 serviceResponse.Message = $"Book with Id {id} not found!";
             }
+
+            await _cacheService.RemoveDataAsync("books");
+            await _cacheService.RemoveDataAsync($"Book: {id}");
 
             _logger.LogInformation("Book deleted successfully. Id: {0}", id);
         }
@@ -202,6 +207,9 @@ public class BooksService : IBooksService
                 .FirstOrDefaultAsync();
 
             serviceResponse.Data = BookMapper.BookToBookResponse(updatedDoc);
+
+            await _cacheService.RemoveDataAsync("books");
+            await _cacheService.RemoveDataAsync($"Book: {id}");
 
             _logger.LogInformation("Book updated successfully. Book Details: Id={0}, Name={1}, Category={2}, Author={3}, Price={4}",
                 updatedDoc.Id, updatedDoc.BookName, updatedDoc.Category, updatedDoc.Author, updatedDoc.Price);

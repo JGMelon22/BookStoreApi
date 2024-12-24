@@ -28,4 +28,15 @@ public class RedisCacheService : IRedisCacheService
         var json = JsonSerializer.Serialize(value);
         await db.StringSetAsync(key, json, expiration);
     }
+
+    public async Task<bool> RemoveDataAsync(string key)
+    {
+        var db = _redis.GetDatabase();
+        bool _isKeyExist = await db.KeyExistsAsync(key);
+        if (_isKeyExist == true)
+        {
+            return await db.KeyDeleteAsync(key);
+        }
+        return false;
+    }
 }
