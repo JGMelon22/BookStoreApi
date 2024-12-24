@@ -52,4 +52,4 @@ A simple ASP .NET Core Web API to register books and learn how to work with Redi
 <h3>References 📚</h3>
 <a href="https://learn.microsoft.com/en-us/aspnet/core/tutorials/first-mongo-app?view=aspnetcore-8.0&tabs=visual-studio">Create a web API with ASP.NET Core and MongoDB</a><br/>
 <a href="https://medium.com/@joaopedrosmelo/using-redis-with-net-8-enhancing-performance-in-high-concurrency-scenarios-87f84b058688">Using Redis with .NET 8: Enhancing Performance in High Concurrency Scenarios</a><br/>
-<a href="https://medium.com/@jaydeepvpatil225/implementation-of-the-redis-cache-in-the-net-core-api-c8276167ef0c">Implementation of the Redis Cache in the.NET Core API</a><br/>///
+<a href="https://medium.com/@jaydeepvpatil225/implementation-of-the-redis-cache-in-the-net-core-api-c8276167ef0c">Implementation of the Redis Cache in the.NET Core API</a><br/>
