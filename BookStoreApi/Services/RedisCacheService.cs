@@ -32,8 +32,8 @@ public class RedisCacheService : IRedisCacheService
     public async Task<bool> RemoveDataAsync(string key)
     {
         var db = _redis.GetDatabase();
-        bool _isKeyExist = await db.KeyExistsAsync(key);
-        if (_isKeyExist == true)
+        bool isKeyExist = await db.KeyExistsAsync(key);
+        if (isKeyExist == true)
         {
             return await db.KeyDeleteAsync(key);
         }
