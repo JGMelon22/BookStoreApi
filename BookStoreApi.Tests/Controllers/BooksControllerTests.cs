@@ -2,7 +2,7 @@ using BookStoreApi.Controllers;
 using BookStoreApi.DTOs;
 using BookStoreApi.Interfaces;
 using BookStoreApi.Models;
-using FluentAssertions;
+using Shouldly;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using Moq;
@@ -48,9 +48,9 @@ public class BooksControllerTests
         var result = await controller.AddBookAsync(newBook);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Should().BeOfType<OkObjectResult>();
-        serviceResponse.Data.Should().Be(bookResponse);
+        result.ShouldNotBeNull();
+        result.ShouldBeOfType<OkObjectResult>();
+        serviceResponse.Data.ShouldBe(bookResponse);
     }
 
     [Fact]
@@ -102,9 +102,9 @@ public class BooksControllerTests
         var result = await controller.GetBooksAsync();
 
         // Assert
-        result.Should().NotBeNull();
-        result.Should().BeOfType<OkObjectResult>();
-        serviceResponse.Data.Count().Should().Be(3);
+        result.ShouldNotBeNull();
+        result.ShouldBeOfType<OkObjectResult>();
+        serviceResponse.Data.Count().ShouldBe(3);
 
         service.Verify(x => x.GetBooksAsync(), Times.Once);
     }
@@ -140,9 +140,9 @@ public class BooksControllerTests
         var result = await controller.GetBookByIdAsync("507f1f77bcf86cd799439011");
 
         // Assert
-        result.Should().NotBeNull();
-        serviceResponse.Data.Should().Be(bookResponse);
-        result.Should().BeOfType<OkObjectResult>();
+        result.ShouldNotBeNull();
+        serviceResponse.Data.ShouldBe(bookResponse);
+        result.ShouldBeOfType<OkObjectResult>();
 
         service.Verify(x => x.GetBookByIdAsync("507f1f77bcf86cd799439011"), Times.Once);
     }
@@ -184,9 +184,9 @@ public class BooksControllerTests
         var result = await controller.UpdateBookAsync("507f1f77bcf86cd799439011", updatedBook);
 
         // Assert
-        result.Should().NotBeNull();
-        serviceResponse.Data.Should().Be(bookResponse);
-        result.Should().BeOfType<OkObjectResult>();
+        result.ShouldNotBeNull();
+        serviceResponse.Data.ShouldBe(bookResponse);
+        result.ShouldBeOfType<OkObjectResult>();
 
         service.Verify(x => x.UpdateBookAsync("507f1f77bcf86cd799439011", updatedBook), Times.Once);
     }
@@ -212,9 +212,9 @@ public class BooksControllerTests
         var result = await controller.RemoveBookAsync("507f1f77bcf86cd799439011");
 
         // Assert
-        result.Should().NotBeNull();
-        serviceResponse.Success.Should().BeTrue();
-        result.Should().BeOfType<NoContentResult>();
+        result.ShouldNotBeNull();
+        serviceResponse.Success.ShouldBeTrue();
+        result.ShouldBeOfType<NoContentResult>();
 
         service.Verify(x => x.RemoveBookAsync("507f1f77bcf86cd799439011"), Times.Once);
     }
