@@ -93,7 +93,7 @@ public class BooksController : ControllerBase
     public async Task<IActionResult> AddBookAsync([FromBody] BookRequest newBook)
     {
         var book = await _booksService.AddBookAsync(newBook);
-        return book.Data != null
+        return book.Success is true
             ? Ok(book)
             : BadRequest(book);
     }
